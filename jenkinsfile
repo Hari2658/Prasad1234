@@ -1,0 +1,101 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage ('ContinuousDownload')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                     git 'https://github.com/Hari2658/Anjupileauto.git'   
+                    }
+                      catch(Exception e1)
+                    {
+                     mail bcc: '', body: 'Jenkins is unable to download from the remote github', cc: ' ', from: '', replyTo: '', subject: 'Download Failed', to: 'git.admin@gmail.com'   
+                    }
+                }
+            }
+            
+        }
+         stage ('ContinuousBuild')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                    sh 'mvn package'   
+                    }
+                      catch(Exception e2)
+                    {
+                      mail bcc: '', body: 'Jenkins is unable to create an artifact from the downloaded code', cc: ' ', from: '', replyTo: '', subject: 'Download Failed', to: 'dev.team@gmail.com'   
+                    }
+                }
+            }
+            
+        }
+        stage ('ContinuousDeployment')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                    deploy adapters: [tomcat9(credentialsId: 'ea7d7341-3354-4c86-9a61-02087cc1d32e', path: '', url: 'http://172.31.19.219:8080')], contextPath: 'hariapp', war: '**/*.war'   
+                    }
+                      catch(Exception e3)
+                    {
+                     mail bcc: '', body: 'jenkins is unable to deploy into tomcat on the QA Server', cc: ' ', from: '', replyTo: '', subject: 'Deployment Failed', to: 'middleware.team@gmail.com'   
+                    }
+                }
+            }
+            
+        }
+        stage ('ContinuousTesting')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                     git 'https://github.com/Hari2658/HariTestingcode.git'
+                     sh 'java -jar /home/ubuntu/.jenkins/workspace/harianjali1/testing.jar'
+                    }
+                      catch(Exception e4)
+                    {
+                     mail bcc: '', body: 'Selenium script are showing a failure status', cc: ' ', from: '', replyTo: '', subject: 'Testing Failed', to: 'Qaserver.team@gmail.com'   
+                    }
+                }
+            }
+            
+        }
+        stage ('ContinuousDelivery')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                    input message: 'need approval from the Anjali', submitter: 'Anjali'
+           deploy adapters: [tomcat9(credentialsId: 'ea7d7341-3354-4c86-9a61-02087cc1d32e', path: '', url: 'http://172.31.22.96:8080')], contextPath: 'kanthapp', war: '**/*.war'   
+                    }
+                      catch(Exception e5)
+                    {
+                     mail bcc: '', body: 'Jenkins is unable to deploy into tomcat on the ProdServer', cc: ' ', from: '', replyTo: '', subject: 'delivery Failed', to: 'delivery.team@gmail.com'     
+                    }
+                }
+            }
+            
+        }
+    }
+}
+         
+
